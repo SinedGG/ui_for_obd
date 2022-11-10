@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="../table.css" />
+  </head>
+  <title>Table</title>
+  <body>
+    <div class="for-buttons">
+      <a class="button" href="/">Main menu</a>
+      <a class="button" href="./culture">Culture</a>
+      <a class="button" href="./varieties">Varieties</a>
+      <a class="button" href="./climate">Climate</a>
+      <a class="button" href="./station">Station</a>
+      <a class="button" href="./tests">Tests</a>
+    </div>
+
+    <table class="container">
+      <thead>
+        <tr>
+          <%for(var i = 0; i < data.head.length ;i++) { %>
+          <th><h1><%=data.head[i]%></h1></th>
+          <%}%>
+        </tr>
+      </thead>
+      <tbody>
+        <%for(var i = 0; i < data.table.length ;i++) { %>
+        <tr>
+          <%for(var j = 0; j < data.head.length ;j++) { %>
+          <td><%-data.table[i][data.head[j]]%></td>
+          <%}%>
+        </tr>
+        <%}%>
+      </tbody>
+    </table>
+  </body>
+</html>

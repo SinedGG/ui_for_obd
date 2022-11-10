@@ -28,9 +28,173 @@
           <%for(var j = 0; j < data.head.length ;j++) { %>
           <td><%-data.table[i][data.head[j]]%></td>
           <%}%>
+          <td onclick="modal_window('<%=data.current_page%>','<%=i%>')">
+            Edit
+          </td>
         </tr>
         <%}%>
       </tbody>
     </table>
+    <div id="myModal" class="modal"></div>
   </body>
 </html>
+
+<script>
+  const data = <%-JSON.stringify(data)%>;
+
+  async function modal_window(window, i) {
+    // функція вікна для редагування
+    if (window == "climate") {
+      var modal = document.querySelector(".modal");
+      modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="climate-form" action="javascript:send('climate', 'id_climate', '${data.table[i].id_climate}')">
+            <label>name_climate</label>
+            <input type="text", maxlength="50", value="${data.table[i].name_climate}" required>
+            <label>id_climate</label>
+            <input type="text", maxlength="5", value="${data.table[i].id_climate}" required>
+            <label>condition_info</label>
+            <textarea>${data.table[i].condition_info}</textarea>
+            <input type="submit">
+            </form>
+            </div>
+          `;
+      modal.style.display = "block";
+    } else if (window == "station") {
+      var modal = document.querySelector(".modal");
+      var datalist = await get_datalist("climate", "types");
+      modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="station-form" action="javascript:send('station', 'id_station', '${data.table[i].id_station}')">
+            <label>id_station</label>
+            <input type="text", maxlength="5", value="${data.table[i].id_station}" required>
+            <label>id_climate</label>
+            ${datalist}
+            <label>station_name</label>
+            <input type="text", maxlength="50", value="${data.table[i].station_name}" required>
+            <label>address</label>
+            <input type="text", maxlength="256", value="${data.table[i].address}" required>
+            <label>area</label>
+            <input type="number", maxlength="10", value="${data.table[i].area}" required>
+            <label>director</label>
+            <input type="text", maxlength="50", value="${data.table[i].director}" required>
+            <label>phone_number</label>
+            <input type="text", maxlength="25", value="${data.table[i].phone_number}" required>
+            <input type="submit">
+            </form>
+            </div>
+          `;
+      modal.style.display = "block";
+    } else if (window == "culture") {
+      var modal = document.querySelector(".modal");
+      modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="culture-form" action="javascript:send('culture' , 'id_culture', '${data.table[i].id_culture}')">
+            <label>id_culture</label>
+            <input type="text", maxlength="5", value="${data.table[i].id_culture}"required>
+            <label>culture_name_ukr</label>
+            <input type="text", maxlength="50", value="${data.table[i].culture_name_ukr}" required>
+            <label>culture_name_lat</label>
+            <input type="text", maxlength="50", value="${data.table[i].culture_name_lat}" required>
+            <input type="submit">
+            </form>
+            </div>
+          `;
+      modal.style.display = "block";
+    } else if (window == "varieties") {
+      var modal = document.querySelector(".modal");
+      var datalist = await get_datalist("culture", "types");
+      modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="varieties-form" action="javascript:send('varieties', 'id_varieties', '${data.table[i].id_varieties}')">
+            <label>id_varieties</label>
+            <input type="text", maxlength="5", value="${data.table[i].id_varieties}" required>
+            <label>id_culture</label>
+            ${datalist}
+            <label>varieties_name</label>
+            <input type="text", maxlength="25", value="${data.table[i].varieties_name}" required>
+            <input type="submit">
+            </form>
+            </div>
+          `;
+      modal.style.display = "block";
+    } else if (window == "tests") {
+      var modal = document.querySelector(".modal");
+      var station_types = await get_datalist("station", "station_types");
+      var culture_types = await get_datalist("culture", "culture_types");
+      var varieties_types = await get_datalist("varieties", "varieties_types");
+      modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="tests-form" action="javascript:send('tests', null , ['${data.table[i].id_varieties}', '${data.table[i].id_culture}', '${data.table[i].id_station}', '${data.table[i].test_year}', '${data.table[i].productivity}'])">
+            <label>id_varieties</label>
+            ${varieties_types}
+            <label>id_culture</label>
+            ${culture_types}
+            <label>id_station</label>
+            ${station_types}
+            <label>test_year</label>
+            <input type="number", maxlength="10", value="${data.table[i].test_year}" required >
+            <label>productivity</label>
+            <input type="number", maxlength="10", value="${data.table[i].productivity}" required>
+            <input type="submit" class="button">
+            </form>
+            </div>
+          `;
+      modal.style.display = "block";
+    }
+    var span = document.getElementsByClassName("close")[0];
+    span.onclick = function () {
+      modal.style.display = "none";
+    };
+  }
+
+  async function get_datalist(table, types) {
+    const host = window.location.protocol + "//" + window.location.host;
+    const req = await axios.post(`${host}/api/datalist?table=${table}`);
+    var out = `<select id="${types}">`;
+    for (let i = 0; i < req.data.length; i++) {
+      out += `<option>${req.data[i]}</option>`;
+    }
+    out += `</select>`;
+    return out;
+  }
+
+  async function send(table, key, key_value) {
+    const inputs = document.getElementById(`${table}-form`).elements;
+    var arr = [];
+    for (let i = 0; i < inputs.length - 1; i++) {
+      arr.push(inputs[i].value);
+    }
+    const host = window.location.protocol + "//" + window.location.host;
+    try {
+      await axios.post(
+        `${host}/api/edit?table=${table}&key=${key}&key_value=${key_value}&data=${JSON.stringify(
+          arr
+        )}`
+      );
+    } catch (error) {
+      var modal = document.querySelector(".modal");
+      modal.innerHTML = `
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <h1>Error</h1>
+            </div>
+          `;
+      var span = document.getElementsByClassName("close")[0];
+      span.onclick = function () {
+        modal.style.display = "none";
+      };
+      return;
+    }
+    location.reload();
+  }
+</script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.1.3/axios.min.js"
+  crossorigin="anonymous"
+></script>
